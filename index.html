@@ -30,8 +30,8 @@
     </script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js UMD CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body class="bg-darkbg text-slate-100 font-sans min-h-screen flex flex-col antialiased">
 
@@ -48,6 +48,11 @@
         </div>
 
         <div id="navUserMenu" class="hidden flex items-center gap-4">
+            <button onclick="openMT5Modal()" class="text-xs bg-slate-800 hover:bg-slate-700 text-blue-400 border border-slate-700 px-3 py-2 rounded-lg transition flex items-center gap-2">
+                <i class="fa-solid fa-robot text-blue-400"></i>
+                <span>MT5 Auto Sync</span>
+            </button>
+
             <button onclick="openConfigModal()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-2 rounded-lg transition flex items-center gap-2">
                 <i class="fa-solid fa-file-excel text-emerald-400"></i>
                 <span id="sheetStatusText">Set Google Sheet</span>
@@ -256,6 +261,10 @@
                         </h3>
                         
                         <div class="flex items-center gap-2 w-full sm:w-auto">
+                            <label class="cursor-pointer text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 font-medium shadow-sm">
+                                <i class="fa-solid fa-file-import"></i> Impor Report MT5
+                                <input type="file" id="mt5FileInput" accept=".html,.htm,.csv" onchange="handleMT5Import(event)" class="hidden">
+                            </label>
                             <input type="text" id="searchInput" oninput="filterTrades()" placeholder="Cari Pair / Notes..." class="px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-brand-500 w-full sm:w-48">
                         </div>
                     </div>
@@ -295,60 +304,114 @@
 
     <!-- MODAL SETTING GOOGLE SHEETS -->
     <div id="configModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <!-- ... existing config modal content ... -->
+    </div>
+
+    <!-- MODAL MT5 AUTO SYNC INSTRUCTIONS -->
+    <div id="mt5Modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-cardbg border border-borderbg rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                 <h3 class="font-bold text-white text-lg flex items-center gap-2">
-                    <i class="fa-solid fa-file-excel text-emerald-400"></i> Konfigurasi Google Sheets API
+                    <i class="fa-solid fa-robot text-blue-400"></i> Otomatisasi & Koneksi MT5 (MetaTrader 5)
                 </h3>
-                <button onclick="closeConfigModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+                <button onclick="closeMT5Modal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
 
             <p class="text-xs text-slate-300 leading-relaxed">
-                Anda bisa menghubungkan website ini secara langsung ke Google Sheets gratis menggunakan <strong>Google Apps Script Web App</strong>.
+                Aplikasi jurnal web ini mendukung <strong>2 metode integrasi MT5</strong> agar data transaksi Anda masuk secara cepat & otomatis:
             </p>
 
-            <div class="space-y-3 bg-slate-900/80 p-4 rounded-xl border border-slate-800 text-xs">
-                <p class="font-semibold text-emerald-400">Cara Menghubungkan Google Sheet (3 Langkah):</p>
-                <ol class="list-decimal pl-4 space-y-1.5 text-slate-300">
-                    <li>Buat Google Sheet baru dengan header di Baris 1: <code class="bg-slate-800 px-1 py-0.5 rounded text-emerald-300">id, date, pair, type, lot, entry, exit, pnl, notes</code></li>
-                    <li>Buka menu <strong>Extensions > Apps Script</strong>, hapus kodenya dan paste kode berikut:</li>
+            <!-- METHOD 1: EA AUTOMATION -->
+            <div class="space-y-3 bg-slate-900/90 p-4 rounded-xl border border-slate-800 text-xs">
+                <div class="flex items-center gap-2 text-blue-400 font-bold">
+                    <span class="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center text-[10px]">1</span>
+                    Otomatis Real-time dengan Expert Advisor (EA MQL5)
+                </div>
+                <p class="text-slate-300">Setiap kali Anda men-close posisi/trade di MT5, EA ini akan otomatis mengirimkan data transaksi ke Google Sheet / Aplikasi Jurnal Anda.</p>
+                
+                <ol class="list-decimal pl-4 space-y-2 text-slate-300">
+                    <li>Buka MetaTrader 5 -> Tekan <kbd class="bg-slate-800 px-1 rounded text-slate-200">F4</kbd> (MetaEditor).</li>
+                    <li>Buat File Baru -> <strong>Expert Advisor (template)</strong> -> beri nama <code class="text-blue-300">TradeJournalSync</code>.</li>
+                    <li>Di MT5: Buka <strong>Tools > Options > Expert Advisors</strong> -> Centang <strong>Allow WebRequest for listed URL</strong>, lalu masukkan URL Web App Google Script Anda.</li>
+                    <li>Salin kode MQL5 di bawah ini ke MetaEditor, masukkan URL Google Script Anda di baris `InpScriptURL`, lalu klik <strong>Compile</strong>:</li>
                 </ol>
 
                 <div class="relative">
-                    <pre class="bg-slate-950 p-3 rounded-lg text-[10px] font-mono text-emerald-400 overflow-x-auto border border-slate-800">
-function doGet(e) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  var data = sheet.getDataRange().getValues();
-  return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
-}
-function doPost(e) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  var data = JSON.parse(e.postData.contents);
-  if(data.action === "add"){
-    sheet.appendRow([data.id, data.date, data.pair, data.type, data.lot, data.entry, data.exit, data.pnl, data.notes]);
-  } else if(data.action === "delete"){
-    var rows = sheet.getDataRange().getValues();
-    for(var i=1; i&lt;rows.length; i++){
-      if(rows[i][0] == data.id){ sheet.deleteRow(i+1); break; }
-    }
-  }
-  return ContentService.createTextOutput(JSON.stringify({status:"success"})).setMimeType(ContentService.MimeType.JSON);
+                    <pre class="bg-slate-950 p-3 rounded-lg text-[10px] font-mono text-blue-300 overflow-x-auto border border-slate-800 max-h-52">
+//+------------------------------------------------------------------+
+//|                                             TradeJournalSync.mq5 |
+//+------------------------------------------------------------------+
+#property copyright "TradeJournal Pro"
+#property version   "1.00"
+
+input string InpScriptURL = "URL_GOOGLE_APPS_SCRIPT_ANDA"; 
+
+void OnTradeTransaction(const MqlTradeTransaction& trans,
+                        const MqlTradeRequest& request,
+                        const MqlTradeResult& result)
+{
+   if(trans.type == TRADE_TRANSACTION_DEAL_ADD)
+   {
+      ulong deal_ticket = trans.deal;
+      if(HistoryDealSelect(deal_ticket))
+      {
+         long entry = HistoryDealGetInteger(deal_ticket, DEAL_ENTRY);
+         if(entry == DEAL_ENTRY_OUT || entry == DEAL_ENTRY_INOUT)
+         {
+            string symbol = HistoryDealGetString(deal_ticket, DEAL_SYMBOL);
+            long type = HistoryDealGetInteger(deal_ticket, DEAL_TYPE);
+            double volume = HistoryDealGetDouble(deal_ticket, DEAL_VOLUME);
+            double price = HistoryDealGetDouble(deal_ticket, DEAL_PRICE);
+            double profit = HistoryDealGetDouble(deal_ticket, DEAL_PROFIT) + 
+                            HistoryDealGetDouble(deal_ticket, DEAL_SWAP) + 
+                            HistoryDealGetDouble(deal_ticket, DEAL_COMMISSION);
+            datetime time = (datetime)HistoryDealGetInteger(deal_ticket, DEAL_TIME);
+            
+            // Format Payload JSON
+            string json = StringFormat(
+               "{\"action\":\"add\",\"id\":\"%i\",\"date\":\"%s\",\"pair\":\"%s\",\"type\":\"%s\",\"lot\":%.2f,\"entry\":0,\"exit\":%.5f,\"pnl\":%.2f,\"notes\":\"MT5 Deal #%i\"}",
+               deal_ticket,
+               TimeToString(time, TIME_DATE),
+               symbol,
+               (type == DEAL_TYPE_BUY ? "SELL" : "BUY"), 
+               volume,
+               price,
+               profit,
+               deal_ticket
+            );
+
+            char data[];
+            char result_data[];
+            string headers = "Content-Type: application/json\r\n";
+            StringToCharArray(json, data, 0, WHOLE_ARRAY, CP_UTF8);
+            ArrayResize(data, ArraySize(data)-1);
+            
+            string result_headers;
+            int res = WebRequest("POST", InpScriptURL, headers, 3000, data, result_data, result_headers);
+            if(res == 200) Print("Trade berhasil di-sync ke TradeJournal!");
+         }
+      }
+   }
 }</pre>
                 </div>
+            </div>
 
-                <ol start="3" class="list-decimal pl-4 space-y-1 text-slate-300">
-                    <li>Klik <strong>Deploy > New deployment > Select Web App</strong>, atur Who has access to: <strong>Anyone</strong>. Salin Web App URL-nya lalu tempelkan di bawah.</li>
+            <!-- METHOD 2: FILE IMPORT -->
+            <div class="space-y-3 bg-slate-900/90 p-4 rounded-xl border border-slate-800 text-xs">
+                <div class="flex items-center gap-2 text-emerald-400 font-bold">
+                    <span class="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center text-[10px]">2</span>
+                    Metode 2: Impor Laporan File MT5 (HTML / CSV)
+                </div>
+                <p class="text-slate-300">Sangat mudah tanpa perlu pasang EA di MT5:</p>
+                <ol class="list-decimal pl-4 space-y-1 text-slate-300">
+                    <li>Buka MT5 Desktop -> tab <strong>History</strong> di panel bawah.</li>
+                    <li>Klik kanan pada area riwayat transaksi -> pilih <strong>Report > Open XML / HTML Report</strong>.</li>
+                    <li>Klik tombol <strong>"Impor Report MT5"</strong> di sebelah kolom pencarian jurnal ini, lalu upload file report tersebut. Semua trade akan masuk otomatis!</li>
                 </ol>
             </div>
 
-            <div>
-                <label class="block text-xs font-semibold text-slate-400 mb-1">GOOGLE APPS SCRIPT WEB APP URL</label>
-                <input type="url" id="scriptUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="w-full p-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-brand-500">
-            </div>
-
-            <div class="flex justify-end gap-3 pt-2 border-t border-slate-800">
-                <button onclick="closeConfigModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs">Batal</button>
-                <button onclick="saveConfig()" class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-slate-950 font-bold rounded-xl text-xs">Simpan & Hubungkan</button>
+            <div class="flex justify-end pt-2 border-t border-slate-800">
+                <button onclick="closeMT5Modal()" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xs">Tutup</button>
             </div>
         </div>
     </div>
@@ -426,6 +489,107 @@ function doPost(e) {
                 statusText.innerText = 'Set Google Sheet';
                 statusText.classList.remove('text-emerald-400');
                 syncBanner.classList.remove('hidden');
+            }
+        }
+
+        function openMT5Modal() {
+            document.getElementById('mt5Modal').classList.remove('hidden');
+        }
+
+        function closeMT5Modal() {
+            document.getElementById('mt5Modal').classList.add('hidden');
+        }
+
+        // Handle MT5 HTML/CSV Import
+        function handleMT5Import(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                parseAndAddMT5Data(content, file.name);
+            };
+            reader.readAsText(file);
+            event.target.value = ''; 
+        }
+
+        function parseAndAddMT5Data(content, fileName) {
+            const newTrades = [];
+
+            if (content.includes('<html') || content.includes('<table')) {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(content, 'text/html');
+                const rows = doc.querySelectorAll('tr');
+
+                rows.forEach(row => {
+                    const cols = Array.from(row.querySelectorAll('td')).map(td => td.innerText.trim());
+                    if (cols.length >= 8) {
+                        const dateStr = cols[0];
+                        const pair = cols[1] || cols[2];
+                        const typeStr = cols[2] || cols[3];
+                        
+                        if (dateStr && dateStr.match(/\d{4}[\.\/-]\d{2}[\.\/-]\d{2}/) && (typeStr.toUpperCase().includes('BUY') || typeStr.toUpperCase().includes('SELL'))) {
+                            const formattedDate = dateStr.split(' ')[0].replace(/\./g, '-');
+                            const type = typeStr.toUpperCase().includes('BUY') ? 'BUY' : 'SELL';
+                            const lot = parseFloat(cols[3]) || parseFloat(cols[4]) || 0.1;
+                            const entry = parseFloat(cols[4]) || parseFloat(cols[5]) || 0;
+                            const exit = parseFloat(cols[8]) || parseFloat(cols[7]) || 0;
+                            const pnlStr = cols[cols.length - 1].replace(/\s/g, '').replace(',', '.');
+                            const pnl = parseFloat(pnlStr);
+
+                            if (!isNaN(pnl)) {
+                                newTrades.push({
+                                    id: Date.now().toString() + Math.random().toString(36).substr(2, 4),
+                                    date: formattedDate,
+                                    pair: pair.toUpperCase().replace('/', ''),
+                                    type: type,
+                                    lot: lot,
+                                    entry: entry,
+                                    exit: exit,
+                                    pnl: pnl,
+                                    notes: `MT5 Import (${fileName})`
+                                });
+                            }
+                        }
+                    }
+                });
+            } else {
+                const lines = content.split('\n');
+                lines.forEach(line => {
+                    const parts = line.split(/[,;\t]/).map(p => p.trim().replace(/"/g, ''));
+                    if (parts.length >= 6) {
+                        const dateMatch = parts[0].match(/\d{4}[\.\/-]\d{2}[\.\/-]\d{2}/);
+                        if (dateMatch) {
+                            const formattedDate = dateMatch[0].replace(/[\.]/g, '-');
+                            const pair = parts[1] || 'FOREX';
+                            const type = (parts[2] || '').toUpperCase().includes('BUY') ? 'BUY' : 'SELL';
+                            const lot = parseFloat(parts[3]) || 0.1;
+                            const pnl = parseFloat(parts[parts.length - 1]) || 0;
+
+                            newTrades.push({
+                                id: Date.now().toString() + Math.random().toString(36).substr(2, 4),
+                                date: formattedDate,
+                                pair: pair.toUpperCase(),
+                                type: type,
+                                lot: lot,
+                                entry: parseFloat(parts[4]) || 0,
+                                exit: parseFloat(parts[5]) || 0,
+                                pnl: pnl,
+                                notes: 'MT5 CSV'
+                            });
+                        }
+                    }
+                });
+            }
+
+            if (newTrades.length > 0) {
+                tradesData = [...newTrades, ...tradesData];
+                saveLocalTrades();
+                renderDashboard();
+                alert(`Berhasil mengimpor ${newTrades.length} transaksi dari report MT5!`);
+            } else {
+                alert('Tidak dapat membaca data transaksi. Pastikan mengunggah file Report HTML/CSV dari MT5.');
             }
         }
 
@@ -677,6 +841,12 @@ function doPost(e) {
         }
 
         function updateCharts() {
+            // Guard clause if Chart.js failed to load or is not ready yet
+            if (typeof Chart === 'undefined') {
+                console.warn('Chart.js library is not loaded yet.');
+                return;
+            }
+
             // Sort chronologically for chart
             const sorted = [...tradesData].reverse();
             let cumulative = 0;
