@@ -1,4 +1,9 @@
-# 📈 Trade Journal App
+TradeJournalByMassamsTrader
+
+Berikut draf README.md yang sudah diperbarui dengan nama repositori dan aplikasi TradeJournalByMassamsTrader:
+
+Markdown
+# 📈 TradeJournalByMassamsTrader
 
 Aplikasi **Trading Journal** modern, ringan, dan responsif berbasis Web. Memudahkan trader untuk mencatat riwayat transaksi, menganalisis performa trading (*win rate*, total PnL, *equity curve*), dan menyimpan data secara otomatis ke **Google Sheets** tanpa memerlukan sewa server/backend tambahan!
 
@@ -27,4 +32,4 @@ Aplikasi **Trading Journal** modern, ringan, dan responsif berbasis Web. Memudah
 
 1. *Clone* repositori ini:
    ```bash
-   git clone [https://github.com/USERNAME/trade-journal.git](https://github.com/USERNAME/trade-journal.git)
+   git clone [https://github.com/USERNAME/TradeJournalByMassamsTrader.git](https://github.com/USERNAME/TradeJournalByMassamsTrader.git)
